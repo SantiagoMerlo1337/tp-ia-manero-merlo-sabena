@@ -14,11 +14,7 @@ from test_entrega1 import DIRECCIONES
 import  pydot
 
 def jugar(paredes, cajas, objetivos, jugador, maximos_movimientos, usar_viewer=False):
-    
-    #movimientos=30
-    #paredes = ((0,0),(0,1),(0,2),(0,3),(1,0),(2,0),(3,0),(4,0),(4,1),(4,2),(4,3),(1,3),(2,3),(3,3))
-    #objetivos = ((1,1)) # ponerle los correctos
-    #jugador=(3,1)
+
     INICIAL=(tuple(cajas), jugador, maximos_movimientos)
 
     class SokobanProblem(SearchProblem):
@@ -106,11 +102,8 @@ def jugar(paredes, cajas, objetivos, jugador, maximos_movimientos, usar_viewer=F
     pasos=[]
     for action, state in result.path():
         if action is not None:
-            #posicion_pj =state[1]
-
             fila_nueva, columna_nueva = action
-            fila, columna = posicion_pj
-            
+            fila, columna = posicion_pj         
             if fila<fila_nueva:
                 pasos.append("abajo")
             if fila>fila_nueva:
@@ -119,8 +112,6 @@ def jugar(paredes, cajas, objetivos, jugador, maximos_movimientos, usar_viewer=F
                 pasos.append("derecha")
             if columna>columna_nueva:
                 pasos.append("izquierda")
-        else: 
-            print('paso por aca') 
         posicion_pj=state[1]               
         print("Moviendo Jugador", action, "llegué a:")
         print(pasos)
