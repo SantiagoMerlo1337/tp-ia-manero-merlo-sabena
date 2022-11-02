@@ -10,13 +10,16 @@ from simpleai.search import (
 )
 from simpleai.search.viewers import WebViewer, BaseViewer
 
-def jugar(paredes, cajas, objetivos, jugador, maximos_movimientos):
+from test_entrega1 import DIRECCIONES
+import  pydot
+
+def jugar(paredes, cajas, objetivos, jugador, maximos_movimientos, usar_viewer=False):
+    
     #movimientos=30
     #paredes = ((0,0),(0,1),(0,2),(0,3),(1,0),(2,0),(3,0),(4,0),(4,1),(4,2),(4,3),(1,3),(2,3),(3,3))
     #objetivos = ((1,1)) # ponerle los correctos
     #jugador=(3,1)
-    INICIAL=(cajas, jugador, maximos_movimientos)
-
+    INICIAL=(tuple(cajas), jugador, maximos_movimientos)
 
     class SokobanProblem(SearchProblem):
         def cost(self, state1, action, state2): 
@@ -27,8 +30,8 @@ def jugar(paredes, cajas, objetivos, jugador, maximos_movimientos):
             for caja in cajas:
                 if caja not in objetivos:
                     return False
-            #if movimientos_restantes<0:
-            #   return False
+            if movimientos_restantes<0:
+               return False
             return True
                 
 
@@ -76,13 +79,13 @@ def jugar(paredes, cajas, objetivos, jugador, maximos_movimientos):
                 if caja not in objetivos:
                     aux+=1
                     camino_caja= caja
-        # fila_caja, columna_caja = camino_caja
-            #fila_jugador , columna_jugador = jugador
-            return aux #+ (abs(fila_caja-fila_jugador)+abs(columna_caja-columna_jugador))# retorna 1 por cada caja, hay que mejorarlo 
+            fila_caja, columna_caja = camino_caja
+            fila_jugador , columna_jugador = jugador
+            return (aux + (abs(fila_caja-fila_jugador)+abs(columna_caja-columna_jugador))-1)# retorna 1 por cada caja, hay que mejorarlo 
     # heuristica de manhattan desde el jugador a alguna caja que no esta en su lugar
 
-    #viewer = WebViewer()
-    viewer = BaseViewer()
+    viewer = WebViewer()
+    #viewer = BaseViewer()
     #result = breadth_first(SokobanProblem(INICIAL),
     #                        graph_search=True)
     # result = breadth_first(SokobanProblem(INICIAL),
@@ -92,16 +95,45 @@ def jugar(paredes, cajas, objetivos, jugador, maximos_movimientos):
     # result = limited_depth_first(SokobanProblem(INICIAL), 5)
     # result = iterative_limited_depth_first(SokobanProblem(INICIAL))
     # result = greedy(SokobanProblem(INICIAL))
-    result = astar(SokobanProblem(INICIAL))
+    if usar_viewer:
+        result = astar(SokobanProblem(INICIAL),graph_search=True, viewer=viewer)
+    else:
+        result = astar(SokobanProblem(INICIAL),graph_search=True)
 
     print("Estado meta:")
+
     print(result.state)
-
+    pasos=[]
     for action, state in result.path():
-        print("Haciendo", action, "llegué a:")
+        if action is not None:
+            #posicion_pj =state[1]
+
+            fila_nueva, columna_nueva = action
+            fila, columna = posicion_pj
+            
+            if fila<fila_nueva:
+                pasos.append("abajo")
+            if fila>fila_nueva:
+                pasos.append("arriba")
+            if columna<columna_nueva:
+                pasos.append("derecha")
+            if columna>columna_nueva:
+                pasos.append("izquierda")
+        else: 
+            print('paso por aca') 
+        posicion_pj=state[1]               
+        print("Moviendo Jugador", action, "llegué a:")
+        print(pasos)
         print(state)
+    return pasos
 
-    print("Profundidad:", len(list(result.path())))
-
-    print("Stats:")
-    print(viewer.stats)
+if __name__ == "__main__":
+    print(jugar(
+        paredes = ((0,0),(3,3)),
+        cajas=((1,2),),
+        objetivos=((1,1),),
+        jugador=(3,1),
+        maximos_movimientos=10,
+        usar_viewer=True,
+    ))
+   
