@@ -20,7 +20,7 @@ def armar_mapa(filas,columnas,cantidad_paredes,cantidad_cajas_objetivos):
         aux_cajas.append(('C'+str(caja)))
         objetivos.append(('O'+str(caja)))
         dominios['O'+str(caja)]=dominio_total
-        dominios['C'+str(caja)]=dominio_total
+        dominios['C'+str(caja)]=dominio_cajas
        
     aux_paredes=[]
     for pared in range(cantidad_paredes):
@@ -43,6 +43,11 @@ def armar_mapa(filas,columnas,cantidad_paredes,cantidad_cajas_objetivos):
     for o1,o2 in combinations((objetivos+aux_paredes),2):
         restricciones.append(((o1,o2),son_diferentes))
 
+
+    for o1,o2 in combinations((objetivos),2):
+        restricciones.append(((o1,o2),son_diferentes))
+
+
     def ganable(variables,values):
         cajas=list(values[0:cantidad_cajas_objetivos])
         objetivos=list(values[cantidad_cajas_objetivos:])
@@ -50,7 +55,7 @@ def armar_mapa(filas,columnas,cantidad_paredes,cantidad_cajas_objetivos):
         objetivos.sort()
         return cajas!=objetivos
 
-    restricciones.append((tuple(aux_cajas+objetivos),ganable))   
+    restricciones.append(((tuple(aux_cajas+objetivos)),ganable))   
 
     def adyacentes(posicion): #generamos una lista con las posiciones adyacentes 
         fila,columna=posicion
@@ -74,7 +79,7 @@ def armar_mapa(filas,columnas,cantidad_paredes,cantidad_cajas_objetivos):
             if pos_pared in ady:
                 c += 1
         if fila_caja==0 or fila_caja==filas-1 or columna_caja==0 or columna_caja == columnas-1:
-            return c<0
+            return c==0
         else:
             return c<1
 
@@ -83,7 +88,7 @@ def armar_mapa(filas,columnas,cantidad_paredes,cantidad_cajas_objetivos):
                 for p1,p2 in combinations((aux_paredes),2):
                     restricciones.append(((caja,p1,p2),cantidad_cajas_adyacentes))
             else:
-                restricciones.append((tuple([caja]+aux_paredes),cantidad_cajas_adyacentes))
+                restricciones.append(((tuple([caja]+aux_paredes)),cantidad_cajas_adyacentes))
              
     problema = CspProblem(variables, dominios, restricciones)
     solucion = backtrack(
