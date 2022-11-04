@@ -1,5 +1,6 @@
 from itertools import combinations
-from simpleai.search import CspProblem, backtrack, MOST_CONSTRAINED_VARIABLE, LEAST_CONSTRAINING_VALUE, HIGHEST_DEGREE_VARIABLE
+from simpleai.search import MOST_CONSTRAINED_VARIABLE, CspProblem, backtrack,LEAST_CONSTRAINING_VALUE,HIGHEST_DEGREE_VARIABLE
+
 
 def armar_mapa(filas,columnas,cantidad_paredes,cantidad_cajas_objetivos): 
     dominios={}
@@ -18,24 +19,20 @@ def armar_mapa(filas,columnas,cantidad_paredes,cantidad_cajas_objetivos):
     for caja in range(cantidad_cajas_objetivos):
         aux_cajas.append(('C'+str(caja)))
         objetivos.append(('O'+str(caja)))
-
+        dominios['O'+str(caja)]=dominio_total
+        dominios['C'+str(caja)]=dominio_total
+       
     aux_paredes=[]
     for pared in range(cantidad_paredes):
         aux_paredes.append(('P'+str(pared)))
+        dominios['P'+str(pared)]=dominio_total
 
-    for pared in aux_paredes:
-        dominios[pared]=dominio_total
-        
-    for objetivo in objetivos:
-        dominios[objetivo]=dominio_total
-    
-    for caja in aux_cajas:
-        dominios[caja]=dominio_cajas
-    
     variables= aux_cajas + aux_paredes + objetivos + ['J']
     restricciones=[]
 
-    def son_diferentes(va, values):
+    #Hasta aca esta todo perfecto, tenemos que mejorar abajo
+
+    def son_diferentes(variables, values):
         val1, val2 = values  
         return val1 != val2
     
@@ -43,13 +40,7 @@ def armar_mapa(filas,columnas,cantidad_paredes,cantidad_cajas_objetivos):
     for v1,v2 in combinations((Varibles_fisicas),2): # diferentes cajas, paredes y jugador 
         restricciones.append(((v1,v2),son_diferentes))
     
-
-    paredes_jugador= aux_paredes + ['J']
-    for v1, v2 in combinations((paredes_jugador),2):
-            restricciones.append(((v1,v2),son_diferentes))
-    restricciones.append((tuple(paredes_jugador),son_diferentes)) #jugador no esta en el mimsmo lugar q la pared
-
-    for o1,o2 in combinations((objetivos),2):
+    for o1,o2 in combinations((objetivos+aux_paredes),2):
         restricciones.append(((o1,o2),son_diferentes))
 
     def ganable(variables,values):
@@ -58,10 +49,8 @@ def armar_mapa(filas,columnas,cantidad_paredes,cantidad_cajas_objetivos):
         cajas.sort()
         objetivos.sort()
         return cajas!=objetivos
- 
-    caja_objetivo = aux_cajas + objetivos # cajas4 cajas obj = 8
-    # restricciones.append((tuple(caja_objetivo),ganable))
-    restricciones.append((tuple(aux_cajas+objetivos),ganable))          
+
+    restricciones.append((tuple(aux_cajas+objetivos),ganable))   
 
     def adyacentes(posicion): #generamos una lista con las posiciones adyacentes 
         fila,columna=posicion
@@ -77,7 +66,6 @@ def armar_mapa(filas,columnas,cantidad_paredes,cantidad_cajas_objetivos):
         return lista_adyacentes
 
     def cantidad_cajas_adyacentes(variable, values):
-        paredes=[]
         pos_caja = values[0]
         fila_caja,columna_caja=pos_caja
         ady = adyacentes(pos_caja)
@@ -88,17 +76,19 @@ def armar_mapa(filas,columnas,cantidad_paredes,cantidad_cajas_objetivos):
         if fila_caja==0 or fila_caja==filas-1 or columna_caja==0 or columna_caja == columnas-1:
             return c<0
         else:
-            return c <1
+            return c<1
 
     for caja in aux_cajas:
-            restricciones.append((tuple([caja]+aux_paredes),cantidad_cajas_adyacentes))
+            if cantidad_paredes>1:
+                for p1,p2 in combinations((aux_paredes),2):
+                    restricciones.append(((caja,p1,p2),cantidad_cajas_adyacentes))
+            else:
+                restricciones.append((tuple([caja]+aux_paredes),cantidad_cajas_adyacentes))
              
-    
     problema = CspProblem(variables, dominios, restricciones)
-    print('antes solucion')
     solucion = backtrack(
         problema,
-        inference=False,
+        inference=True,
         variable_heuristic=MOST_CONSTRAINED_VARIABLE,
         value_heuristic=LEAST_CONSTRAINING_VALUE,
     )
@@ -114,12 +104,9 @@ def armar_mapa(filas,columnas,cantidad_paredes,cantidad_cajas_objetivos):
     lista_objetivo=[]
     for objetivo in objetivos:
        lista_objetivo.append(solucion[objetivo])  
-
-    final = (lista_paredes,lista_cajas,lista_objetivo,solucion['J'])
-    print(final)
-    return(final)
-
     
+    return(lista_paredes,lista_cajas,lista_objetivo,solucion['J'])
+   
 if __name__ == "__main__":
-    resultado =(armar_mapa(filas = 3, columnas = 3, cantidad_paredes = 1,cantidad_cajas_objetivos = 1   ))
-    
+    resultado =(armar_mapa(filas = 5, columnas = 5, cantidad_paredes = 4,cantidad_cajas_objetivos = 3   ))
+    print(resultado)
